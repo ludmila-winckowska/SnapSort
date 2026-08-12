@@ -1,57 +1,135 @@
 # SnapSort
 
-SnapSort is a simple Python GUI application 
-that organizes photos and videos into 
-folders by **year and month** based on file 
-date information.
+SnapSort is a small Python desktop application for organizing photos and videos into folders by year and month.
 
-## Features
+I originally built this project as one of my first Python applications. I later revisited it to audit the file-handling logic, 
+fix reliability issues, and improve the code while preserving the original architecture and behavior.
 
-- Sorts photos (`.jpg`, `.jpeg`, `.png`) using **EXIF DateTimeOriginal**
-- Falls back to system file modification date if EXIF is missing
-- Sorts videos (`.mp4`, `.mov`, `.3gp`) using file modification date
-- Moves unknown or unsupported files to `__problem_files__`
-- Automatically removes empty folders after sorting
-- Prevents overwriting by adding suffixes (`_1`, `_2`, etc.) if a file already exists
+## Demo
 
-## How to Use
+[Watch the 30-second SnapSort demo on YouTube](https://youtu.be/6VITpNUsIZU)
 
-1. Launch the application.
-2. Click **"Select Folder…"** and choose a folder containing photos/videos.
-3. Click **"Sort"**.
-4. Monitor progress in the application log window.
+## What it does
 
-## Supported Formats
+SnapSort recursively scans a selected folder and organizes supported media files into folders named in the `YYYY-MM` format.
 
-**Photos:** `.jpg`, `.jpeg`, `.png`  
-**Videos:** `.mp4`, `.mov`, `.3gp`
+For images:
 
-## Requirements (if running from source)
+- `.jpg`
+- `.jpeg`
+- `.png`
 
-- Python 3.8+
-- Pillow library
+SnapSort first looks for the EXIF `DateTimeOriginal` value. If a usable EXIF date is unavailable, 
+it falls back to the file system modification date.
 
-Install Pillow:
+For videos:
+
+- `.mp4`
+- `.mov`
+- `.3gp`
+
+the file system modification date is used.
+
+Unsupported or unreadable files are moved to:
+
+```text
+__problem_files__
+```
+
+so that a single problematic file does not stop the rest of the sorting process.
+
+## Reliability and safety behavior
+
+The current version includes several safeguards:
+
+- Existing destination files are never overwritten. A numeric suffix is added when necessary.
+- Running SnapSort repeatedly does not rename files that are already in the correct destination folder.
+- The `__problem_files__` directory is excluded from recursive processing.
+- Conflicting filenames inside `__problem_files__` are handled without overwriting existing files.
+- Invalid EXIF dates fall back safely instead of producing malformed destination folders.
+- Errors affecting individual files are logged without stopping the entire batch.
+- Image files are opened using a context manager so resources are closed correctly.
+- Empty source directories are removed after processing when possible.
+
+## Interface
+
+SnapSort uses a simple Tkinter GUI that allows the user to:
+
+1. Select a folder.
+2. Start sorting.
+3. View processing messages in a log window.
+4. Clear the log.
+
+## Requirements
+
+- Python 3
+- Pillow
+- Tkinter
+
+Install Pillow with:
 
 ```bash
-pip install pillow
+python -m pip install Pillow
+```
+
+Tkinter is included with standard Python installations on Windows.
+
+## Running the application
+
+Clone the repository:
+
+```bash
+git clone https://github.com/ludmila-winckowska/SnapSort.git
+```
+
+Open the project directory:
+
+```bash
+cd SnapSort
+```
 
 Run:
 
-python PhotoVideoSorter_GUI.py
+```bash
+python SnapSort.py
+```
 
-Build as .exe 
-(optional)
+## Project history
 
-The project can be packaged into a Windows 
-executable using PyInstaller.
+SnapSort is intentionally kept as an evolution of my original project rather than being rewritten from scratch.
 
+The Git history contains the earlier version of the application as well as the later reliability-focused revision.
+ This preserves the development process and makes the improvements visible over time.
 
+The revised version was reviewed and tested for:
 
-Important
+- syntax correctness;
+- image sorting;
+- repeated runs;
+- unreadable image handling;
+- filename collisions;
+- preservation of files already stored in `__problem_files__`.
 
+## Current scope
 
-The application moves files (it does not copy them).
+SnapSort remains a small learning project rather than a production file-management tool.
 
-It is recommended to create a backup before 
-sorting important data.
+Its current design intentionally keeps several characteristics of the original implementation, including:
+
+- synchronous GUI processing;
+- recursive directory traversal;
+- file-system modification dates for videos;
+- modification-date fallback for images without usable EXIF metadata;
+- moving unsupported files into `__problem_files__`;
+- removal of empty directories after sorting.
+
+These choices are documented rather than hidden because the purpose of this repository is also 
+to show how an early project was reviewed and improved over time.
+
+## Technologies
+
+- Python
+- Tkinter
+- Pillow
+- EXIF metadata
+- Git / GitHub
